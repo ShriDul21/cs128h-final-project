@@ -27,12 +27,10 @@ While this project is a bit technical due to its quantum nature, we have found p
 
 UIUC itself offers a computational physics class, and one of the projects is simulating a quantum computer in Python/C++. There is a comprehensive guide on the project discussing various ways to approach a naive backend linked below. 
 https://courses.physics.illinois.edu/PHYS446/sp2023/QC/Overview.html 
-There are also some resources for backend extensions:
-https://iopscience.iop.org/article/10.1088/2058-9565/ab5887 (QEC/density matrix)
-https://pennylane.ai/qml/demos/tutorial_mps (Tensor methods)
 
-For the frontend, we found a few applications that inspired us as well: https://quantum.cloud.ibm.com/composer
-https://algassert.com/quirk
+There are also some resources for backend extensions: <br>  https://iopscience.iop.org/article/10.1088/2058-9565/ab5887 (QEC/density matrix) <br> https://pennylane.ai/qml/demos/tutorial_mps (Tensor methods)
+
+For the frontend, we found a few applications that inspired us as well:  <br> https://quantum.cloud.ibm.com/composer <br> https://algassert.com/quirk
 
 
 
