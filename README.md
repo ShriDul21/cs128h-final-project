@@ -3,9 +3,7 @@
 # Group Name: Unitary Evolution 
 
 # Group Members: 
-Shrikar Dulam (sdulam2),  
-Bobby Mandell (bobbym3), 
-Aashima Sisodia (aashima2) 
+Shrikar Dulam (sdulam2), Bobby Mandell (bobbym3), Aashima Sisodia (aashima2) 
 
 # Introduction
 We seek to build an interactive quantum computing simulator that is both accessible and effective. The primary objective is to design an application that allows users to construct and run quantum circuits, visualize quantum states and measurement results, and explore quantum noise and error-correction concepts. We also hope to implement multiple approaches, from straightforward statevectors to advanced tensor-network techniques relevant to current research.
