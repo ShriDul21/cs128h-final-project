@@ -25,7 +25,7 @@ We foresee implementing the frontend to be one of the bigger challenges, as we a
 While this project is a bit technical due to its quantum nature, we have found plenty of useful resources that can help assist us. 
 
 
-UIUC itself offers a computational physics class, and one of the projects is simulating a quantum computer in Python/C++. There is a comprehensive guide on the project discussing various ways to approach a naive backend linked below. 
+UIUC itself offers a computational physics class, and one of the projects is simulating a quantum computer in Python/C++. There is a comprehensive guide on the project discussing various ways to approach a naive backend linked below. <br>  
 https://courses.physics.illinois.edu/PHYS446/sp2023/QC/Overview.html 
 
 There are also some resources for backend extensions: <br>  https://iopscience.iop.org/article/10.1088/2058-9565/ab5887 (QEC/density matrix) <br> https://pennylane.ai/qml/demos/tutorial_mps (Tensor methods)
