@@ -13,7 +13,7 @@ fn main() {
     let mut c = Circuit::new(2);
 
     let gates = vec![
-        GateInstance::new(1, vec![1], Box::new(H)),
+        GateInstance::new(1, vec![0], Box::new(H)),
         GateInstance::new(0, vec![0,1], Box::new(CNOT)),
     ];
 

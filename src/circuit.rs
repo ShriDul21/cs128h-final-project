@@ -33,7 +33,7 @@ impl Circuit {
         let mut final_unitary = Array2::<Complex<f64>>::eye(2_usize.pow(self.num_qubits as u32));
         for ts in &self.timesteps {
             let u = ts.compile(self.num_qubits);
-            final_unitary = u.dot(&final_unitary);
+            final_unitary = final_unitary.dot(&u);
           
         }
 
