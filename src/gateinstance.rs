@@ -1,3 +1,6 @@
+use crate::gates::Gate;
+#[derive(Clone)]
+
 pub struct GateInstance {
     //the time it acts on
     pub time: usize,           
