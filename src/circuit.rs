@@ -24,10 +24,10 @@ impl Circuit {
         times.sort();
 
         self.timesteps = times.iter().map(|t| Timestep { gates: map[t].clone() }).collect();
-        println!("Time map keys: {:?}", map.keys());
-        for (t, gs) in &map {
-            println!("timestep {}: {:?}", t, gs.iter().map(|g| g.gate.name()).collect::<Vec<_>>());
-        }       
+        // println!("Time map keys: {:?}", map.keys());
+        // for (t, gs) in &map {
+        //     println!("timestep {}: {:?}", t, gs.iter().map(|g| g.gate.name()).collect::<Vec<_>>());
+        // }       
 
         // compile each timestep sequentially
         let mut final_unitary = Array2::<Complex<f64>>::eye(2_usize.pow(self.num_qubits as u32));

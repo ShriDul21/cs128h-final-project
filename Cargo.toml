@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 ndarray = { version = "0.15" }
+ndarray-einsum = "0.8.0"
 num-complex = "0.4"
