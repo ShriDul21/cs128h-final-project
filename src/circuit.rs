@@ -7,11 +7,13 @@ use num_complex::Complex;
 pub struct Circuit {
     pub num_qubits: usize,
     pub timesteps: Vec<Timestep>,
+    pub final_unitary: Array2::<Complex<f64>>, 
 }
 
 impl Circuit {
     pub fn new(num_qubits: usize) -> Self {
-        Self { num_qubits, timesteps: vec![] }
+        Self { num_qubits, timesteps: vec![], 
+            final_unitary: Array2::<Complex<f64>>::eye(2_usize.pow(num_qubits as u32))}
     }
     pub fn compute(&mut self, gates: Vec<GateInstance>) -> Array2<Complex<f64>> {
         // grouping gates by time <time, gates>
@@ -30,14 +32,13 @@ impl Circuit {
         // }       
 
         // compile each timestep sequentially
-        let mut final_unitary = Array2::<Complex<f64>>::eye(2_usize.pow(self.num_qubits as u32));
         for ts in &self.timesteps {
             let u = ts.compile(self.num_qubits);
-            final_unitary = final_unitary.dot(&u);
+            self.final_unitary = self.final_unitary.dot(&u);
           
         }
 
-        final_unitary
+        self.final_unitary.clone()
     }
 }
 
