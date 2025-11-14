@@ -92,3 +92,20 @@ impl Gate for X{
     fn num_qubits(&self) -> usize { 1 }
     fn name(&self) -> &'static str { "X" }
 }
+
+#[derive(Clone, Debug)]
+pub struct CCZ;
+impl Gate for CCZ{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+
+        let diag = ndarray::arr1(&[Complex::new(1.0,0.0),Complex::new(1.0,0.0),
+                                                                            Complex::new(1.0,0.0),Complex::new(1.0,0.0),
+                                                                            Complex::new(1.0,0.0),Complex::new(1.0,0.0),
+                                                                            Complex::new(1.0,0.0),Complex::new(-1.0,0.0)]);
+
+        return Array2::from_diag(&diag);
+        
+    }
+    fn num_qubits(&self) -> usize {3}
+    fn name(&self) -> &'static str { "CCZ" }
+}
