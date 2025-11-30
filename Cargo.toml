@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+gloo = "0.11.0"
+js-sys = "0.3.83"
 ndarray = { version = "0.15" }
 ndarray-einsum = "0.8.0"
 num-complex = "0.4"
+yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
