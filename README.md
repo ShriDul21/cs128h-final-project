@@ -1,6 +1,6 @@
 # Quantum Rust: An Interactive, Performant Quantum Simulator
 
-# Group Name: Unitary Evolution 
+# Group Name: *Unitary Evolution* 
 
 # Group Members: 
 Shrikar Dulam (sdulam2), Bobby Mandell (bobbym3), Aashima Sisodia (aashima2) 
