@@ -70,6 +70,54 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 timeline[control_2][t] = Cell::Control;
                 timeline[target][t] = Cell::Gate("Z".to_owned());
             }
+            "RX" => {
+                let control_1 = gate.targets[0];
+                let target = gate.targets[1];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("RX".to_owned());
+            }
+            "RY" => {
+                let control_1 = gate.targets[0];
+                let target = gate.targets[1];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("RY".to_owned());
+            }
+            "RZ" => {
+                let control_1 = gate.targets[0];
+                let target = gate.targets[1];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("RZ".to_owned());
+            }
+            "CRX" => {
+                let control_1 = gate.targets[0];
+                let control_2 = gate.targets[1];
+                let target = gate.targets[2];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[control_2][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("CRX".to_owned());
+            }
+            "CRY" => {
+                let control_1 = gate.targets[0];
+                let control_2 = gate.targets[1];
+                let target = gate.targets[2];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[control_2][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("CRY".to_owned());
+            }
+            "CRZ" => {
+                let control_1 = gate.targets[0];
+                let control_2 = gate.targets[1];
+                let target = gate.targets[2];
+
+                timeline[control_1][t] = Cell::Control;
+                timeline[control_2][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("CRZ".to_owned());
+            }
             other => {
                 if let Some(&q) = gate.targets.first() {
                      if q < qubits {
