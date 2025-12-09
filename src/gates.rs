@@ -11,8 +11,8 @@ pub trait Gate: GateClone + Debug {
 
     // string name of gate
     fn name(&self) -> &'static str;
-
 }
+
 pub trait GateClone {
     fn clone_box(&self) -> Box<dyn Gate>;
 }
@@ -34,7 +34,9 @@ impl Clone for Box<dyn Gate> {
 
 // identity gate
 #[derive(Clone, Debug)]
-pub struct I;
+pub struct I{
+    theta : f64
+}
 
 impl Gate for I {
     fn matrix(&self) -> Array2<Complex<f64>> {
@@ -157,4 +159,49 @@ impl Gate for CZ{
     }
     fn num_qubits(&self) -> usize {2}
     fn name(&self) -> &'static str { "CZ" }
+}
+
+#[derive(Clone, Debug)]
+pub struct RX{
+    pub theta: f64
+}
+impl Gate for RX{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        ndarray::array![
+           [Complex::new((self.theta / 2.0).cos(), 0.0), Complex::new(0.0, -(self.theta / 2.0).sin())],
+           [Complex::new(0.0, -(self.theta / 2.0).sin()), Complex::new((self.theta / 2.0).cos(), 0.0)] 
+        ]
+    }
+    fn num_qubits(&self) -> usize {1}
+    fn name(&self) -> &'static str { "RX" }
+}
+
+#[derive(Clone, Debug)]
+pub struct RY{
+    pub theta: f64
+}
+impl Gate for RY{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        ndarray::array![
+           [Complex::new((self.theta / 2.0).cos(), 0.0), Complex::new(-(self.theta / 2.0).sin(), 0.0)],
+           [Complex::new((self.theta / 2.0).sin(), 0.0), Complex::new((self.theta / 2.0).cos(), 0.0)] 
+        ]
+    }
+    fn num_qubits(&self) -> usize {1}
+    fn name(&self) -> &'static str { "RX" }
+}
+
+#[derive(Clone, Debug)]
+pub struct RZ{
+    pub theta: f64
+}
+impl Gate for RZ{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        ndarray::array![
+           [Complex::new((self.theta / 2.0).cos(), -(self.theta / 2.0).sin()), Complex::new(0.0, 0.0)],
+           [Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).cos(), (self.theta / 2.0).sin())] 
+        ]
+    }
+    fn num_qubits(&self) -> usize {1}
+    fn name(&self) -> &'static str { "RX" }
 }
