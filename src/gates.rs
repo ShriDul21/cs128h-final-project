@@ -109,3 +109,52 @@ impl Gate for CCZ{
     fn num_qubits(&self) -> usize {3}
     fn name(&self) -> &'static str { "CCZ" }
 }
+
+#[derive(Clone, Debug)]
+pub struct Y;
+impl Gate for Y{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+
+        ndarray::array![
+           [Complex::new(0.0, 0.0), Complex::new(0.0, -1.0)],
+           [Complex::new(0.0, 1.0), Complex::new(0.0, 0.0)]
+        ]
+        
+    }
+    fn num_qubits(&self) -> usize {1}
+    fn name(&self) -> &'static str { "Y" }
+}
+
+#[derive(Clone, Debug)]
+pub struct CY;
+impl Gate for CY{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0,0.0), Complex::new(0.0,0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, -1.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)] 
+        ]
+        
+    }
+    fn num_qubits(&self) -> usize {2}
+    fn name(&self) -> &'static str { "CY" }
+}
+
+#[derive(Clone, Debug)]
+pub struct CZ;
+impl Gate for CZ{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0,0.0), Complex::new(0.0,0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(-1.0, 0.0)] 
+        ]
+        
+    }
+    fn num_qubits(&self) -> usize {2}
+    fn name(&self) -> &'static str { "CZ" }
+}
