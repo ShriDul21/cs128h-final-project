@@ -3,7 +3,7 @@ use gloo::console;
 
 use crate::circuit::Circuit;
 use crate::gateinstance::GateInstance;
-use crate::gates::{H, CNOT, CRX, CRY, CRZ, Z, X, Y, RX, RY, RZ, CCZ};
+use crate::gates::{H, CY, CZ, CNOT, CRX, CRY, CRZ, Z, X, Y, RX, RY, RZ, CCZ};
 use num_complex::Complex;
 use crate::circuitvisualizer::{build_timeline, render_circuit};
 
@@ -18,6 +18,8 @@ pub enum Msg {
 	AddRY(f64, usize),
 	AddRZ(f64, usize),
     AddCNOT(usize, usize),
+	AddCZ(usize, usize),
+	AddCY(usize, usize),
 	AddCRX(f64, usize, usize),
 	AddCRY(f64, usize, usize),
 	AddCRZ(f64, usize, usize),
@@ -108,7 +110,7 @@ impl Component for App {
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![target],
-					Box::new(crate::gates::X),
+					Box::new(X),
 				));
 				true
 			}
@@ -117,7 +119,7 @@ impl Component for App {
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![target],
-					Box::new(crate::gates::Y),
+					Box::new(Y),
 				));
 				true
 			}
@@ -125,7 +127,7 @@ impl Component for App {
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![target],
-					Box::new(crate::gates::Z),
+					Box::new(Z),
 				));
 				true
 			}
@@ -133,7 +135,7 @@ impl Component for App {
 			self.gates.push(GateInstance::new(
 				self.gates.len(),
 				vec![target],
-				Box::new(crate::gates::RX{theta: angle})),
+				Box::new(RX{theta: angle})),
 			);
 			true
 			}
@@ -141,7 +143,7 @@ impl Component for App {
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![target],
-					Box::new(crate::gates::RY{theta: angle}),
+					Box::new(RY{theta: angle}),
 				));
 				true
 			}
@@ -149,11 +151,14 @@ impl Component for App {
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![target],
-					Box::new(crate::gates::RZ{theta: angle}),		
+					Box::new(RZ{theta: angle}),		
 				));
 				true
 			}	
             Msg::AddCNOT(control, target) => {
+				if control == target {
+					false;
+				}
                 self.gates.push(GateInstance::new(
                     self.gates.len(),
                     vec![control, target],
@@ -161,35 +166,69 @@ impl Component for App {
                 ));
                 true
             }
+			Msg::AddCZ(control, target) => {	
+				if control == target {
+					false;
+				}
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control, target],
+					Box::new(CZ),
+				));
+				true
+			}
+			Msg::AddCY(control, target) => {
+				if control == target {
+					false;
+				}	
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control, target],
+					Box::new(CY),
+				));
+				true
+			}
 			Msg::AddCCZ(control1, control2, target) => {
+				if control1 == target || control2 == target || control1 == control2 {
+					false;
+				}
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![control1, control2, target],
-					Box::new(crate::gates::CCZ),
+					Box::new(CCZ),
 				));
 				true
 			}
 			Msg::AddCRX(rotation,	control1, target) => {
+				if control1 == target{
+					false;
+				}
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![control1, target],
-					Box::new(crate::gates::CRX{theta: rotation}),
+					Box::new(CRX{theta: rotation}),
 				));
 				true
 			}
 			Msg::AddCRY(rotation,	control1, target) => {
+				if control1 == target {
+					false;
+				}
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![control1, target],
-					Box::new(crate::gates::CRY{theta: rotation}),	
+					Box::new(CRY{theta: rotation}),	
 				));
 				true
 			}
 			Msg::AddCRZ(rotation,	control1, target) => {
+				if control1 == target {
+					false;
+				}
 				self.gates.push(GateInstance::new(
 					self.gates.len(),
 					vec![control1, target],
-					Box::new(crate::gates::CRZ{theta: rotation}),
+					Box::new(CRZ{theta: rotation}),
 				));
 				true
 			}
@@ -230,7 +269,7 @@ impl Component for App {
                 // Remove existing gates at this time that overlap with the new gate's target
                 // For simplicity, H takes 1 qubit. CNOT takes 2.
                 let mut targets = vec![qubit];
-                if name == "CNOT" || name == "CRX" || name == "CRY" || name == "CRZ" {
+                if name == "CNOT" || name == "CRX" || name == "CRY" || name == "CRZ" || name == "CZ"  || name == "CY" {
                     if qubit + 1 < self.qubits {
                         targets.push(qubit + 1);
                     } else if qubit > 0 {
@@ -240,7 +279,7 @@ impl Component for App {
                         return false; 
                     }
                 }
-				if name == "CCZ" {
+				else if name == "CCZ" {
 					if qubit + 2 < self.qubits {
 						targets.push(qubit + 1);
 						targets.push(qubit + 2);
@@ -252,6 +291,7 @@ impl Component for App {
 						return false; 
 					}
 				}
+				else {}
 
                 // Remove checks
                 self.gates.retain(|g| {
@@ -272,6 +312,8 @@ impl Component for App {
 					"RY" => Box::new(RY{theta: self.rotation_angle}),
 					"RZ" => Box::new(RZ{theta: self.rotation_angle}),
                     "CNOT" => Box::new(CNOT),
+					"CZ" => Box::new(CZ),
+					"CY" => Box::new(CY),
 					"CRX" => Box::new(CRX{theta: self.rotation_angle}),
 					"CRY" => Box::new(CRY{theta: self.rotation_angle}),
 					"CRZ" => Box::new(CRZ{theta: self.rotation_angle}),
@@ -461,6 +503,29 @@ impl Component for App {
                         >
                             { "CNOT" }
                         </div>
+
+						<div
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CZ").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCZ(control1, target))}  // Add CZ gate to qubits on click
+							>
+							{ "CZ" }
+							
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CY").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCY(control1, target))}  // Add CY gate to qubits on click
+						>	
+							{ "CY" }
+						</div>
+
 						<div 
 							class="toolbox-item" 
 							draggable="true" 

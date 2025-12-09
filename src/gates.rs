@@ -62,6 +62,7 @@ impl Gate for CNOT {
     fn name(&self) -> &'static str { "CNOT" }
 }
 
+
 // H gate
 #[derive(Clone, Debug)]
 pub struct H;
