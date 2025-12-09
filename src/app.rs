@@ -10,13 +10,24 @@ use crate::circuitvisualizer::{build_timeline, render_circuit};
 #[derive(Clone)]
 pub enum Msg {
     SetQubits(String),
+	AddX(usize),
+	AddY(usize),
+	AddZ(usize),
     AddH(usize),
+	AddRX(f64, usize),
+	AddRY(f64, usize),
+	AddRZ(f64, usize),
     AddCNOT(usize, usize),
+	AddCRX(f64, usize, usize),
+	AddCRY(f64, usize, usize),
+	AddCRZ(f64, usize, usize),
+	AddCCZ(usize, usize, usize),
     Run,
     AddGateAt(String, usize, usize), // (Gate Name, Qubit Index, Time Step)
 	SetControl1(String),
 	SetControl2(String),
 	SetTarget(String),
+	SetRotationAngle(String),
 }
 
 pub struct App {
@@ -26,6 +37,7 @@ pub struct App {
 	control1: usize,
 	control2: usize,
 	target: usize,
+	rotation_angle: f64,
 }
 
 impl Component for App {
@@ -40,6 +52,7 @@ impl Component for App {
 			control1: 0,
 			control2: 0,
 			target: 0,
+			rotation_angle: 0.0,
         }
     }
 
@@ -72,6 +85,12 @@ impl Component for App {
                 }
                 true
             }
+			Msg::SetRotationAngle(v) => {
+				if let Ok(angle) = v.parse::<f64>() {
+					self.rotation_angle = angle;
+				}
+				true
+			}
 
             Msg::AddH(target) => {
 				//view_gate_panel(&self, ctx);
@@ -83,6 +102,55 @@ impl Component for App {
                 true
             }
 
+			Msg::AddX(target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![target],
+					Box::new(crate::gates::X),
+				));
+				true
+			}
+
+			Msg::AddY(target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![target],
+					Box::new(crate::gates::Y),
+				));
+				true
+			}
+			Msg::AddZ(target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![target],
+					Box::new(crate::gates::Z),
+				));
+				true
+			}
+			Msg::AddRX(angle, target) => {
+			self.gates.push(GateInstance::new(
+				self.gates.len(),
+				vec![target],
+				Box::new(crate::gates::RX{theta: angle})),
+			);
+			true
+			}
+			Msg::AddRY(angle, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![target],
+					Box::new(crate::gates::RY{theta: angle}),
+				));
+				true
+			}
+			Msg::AddRZ(angle, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![target],
+					Box::new(crate::gates::RZ{theta: angle}),		
+				));
+				true
+			}	
             Msg::AddCNOT(control, target) => {
                 self.gates.push(GateInstance::new(
                     self.gates.len(),
@@ -91,8 +159,38 @@ impl Component for App {
                 ));
                 true
             }
-			
-
+			Msg::AddCCZ(control1, control2, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control1, control2, target],
+					Box::new(crate::gates::CCZ),
+				));
+				true
+			}
+			Msg::AddCRX(rotation,	control1, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control1, target],
+					Box::new(crate::gates::CRX{theta: rotation}),
+				));
+				true
+			}
+			Msg::AddCRY(rotation,	control1, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control1, target],
+					Box::new(crate::gates::CRY{theta: rotation}),	
+				));
+				true
+			}
+			Msg::AddCRZ(rotation,	control1, target) => {
+				self.gates.push(GateInstance::new(
+					self.gates.len(),
+					vec![control1, target],
+					Box::new(crate::gates::CRZ{theta: rotation}),
+				));
+				true
+			}
             Msg::Run => {
                 console::log!("Running quantum circuit…");
 
