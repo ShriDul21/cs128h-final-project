@@ -112,12 +112,13 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
 
 // ... (Timeline definition)
 
-pub fn render_circuit(timeline: &Timeline, on_drop: Callback<(usize, usize, String)>) -> Html {
+pub fn render_circuit(timeline: &Timeline, on_drop: Callback<(usize, usize, String)>, on_delete: Callback<(usize, usize)>) -> Html {
     html! {
         <div class="circuit">
             {
                 for timeline.iter().enumerate().map(|(q, row)| {
                     let on_drop = on_drop.clone();
+                    let on_delete = on_delete.clone();
                     html! {
                         <div class="wire-row">
 
@@ -126,6 +127,7 @@ pub fn render_circuit(timeline: &Timeline, on_drop: Callback<(usize, usize, Stri
                             {
                                 for row.iter().enumerate().map(|(t, cell)| {
                                     let on_drop = on_drop.clone();
+                                    let on_delete = on_delete.clone();
                                     
                                     let ondragover = Callback::from(|e: DragEvent| {
                                         e.prevent_default();
@@ -140,18 +142,22 @@ pub fn render_circuit(timeline: &Timeline, on_drop: Callback<(usize, usize, Stri
                                         }
                                     });
 
+                                    let ondblclick = Callback::from(move |_| {
+                                        on_delete.emit((q, t));
+                                    });
+
                                     match cell {
                                         Cell::Empty => html! { 
                                             <div class="cell empty" {ondragover} {ondrop}></div> 
                                         },
                                         Cell::Gate(name) => html! { 
-                                            <div class="cell gate" {ondragover} {ondrop}>{ name }</div> 
+                                            <div class="cell gate" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ name }</div> 
                                         },
                                         Cell::Control => html! { 
-                                            <div class="cell control" {ondragover} {ondrop}>{ "●" }</div> 
+                                            <div class="cell control" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ "●" }</div> 
                                         },
                                         Cell::Target => html! { 
-                                            <div class="cell target" {ondragover} {ondrop}>{ "⊕" }</div> 
+                                            <div class="cell target" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ "⊕" }</div> 
                                         },
                                     }
                                 })

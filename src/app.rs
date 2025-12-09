@@ -27,7 +27,9 @@ pub enum Msg {
 	SetControl1(String),
 	SetControl2(String),
 	SetTarget(String),
+
 	SetRotationAngle(String),
+    RemoveGateAt(usize, usize), // (Qubit Index, Time Step)
 }
 
 pub struct App {
@@ -191,6 +193,20 @@ impl Component for App {
 				));
 				true
 			}
+
+            
+            Msg::RemoveGateAt(qubit, time) => {
+                // Remove the gate found at (qubit, time)
+                self.gates.retain(|g| {
+                    if g.time == time && g.targets.contains(&qubit) {
+                        return false;
+                    }
+                    true
+                });
+                self.result_state = None; // Reset results
+                true
+            }
+
             Msg::Run => {
                 console::log!("Running quantum circuit…");
 
@@ -488,16 +504,18 @@ impl Component for App {
                     </div>
                 </div>
 
+              				// ---- Circuit Preview ----
 				<div class="panel">
 				    <h3>{ "Circuit Preview" }</h3>
 				    <div class="circuit-container-scroll">
 				        { render_circuit(
                             &build_timeline(self.qubits, &self.gates, 25), // Show at least 25 steps
-                            link.callback(|(q, t, g)| Msg::AddGateAt(g, q, t))
+                            link.callback(|(q, t, g)| Msg::AddGateAt(g, q, t)),
+                            link.callback(|(q, t)| Msg::RemoveGateAt(q, t))
                         ) }
 				    </div>
 				</div>
-
+                
                 // ---- Run ----
                 <button class="run" onclick={link.callback(|_| Msg::Run)}>
                     { "Run Circuit" }

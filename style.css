@@ -18,6 +18,7 @@ h1 {
     letter-spacing: -2px;
     background: linear-gradient(135deg, #b06aff 0%, #5d00ff 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 4px 20px rgba(93, 0, 255, 0.3);
 }
