@@ -188,7 +188,7 @@ impl Gate for RY{
         ]
     }
     fn num_qubits(&self) -> usize {1}
-    fn name(&self) -> &'static str { "RX" }
+    fn name(&self) -> &'static str { "RY" }
 }
 
 #[derive(Clone, Debug)]
@@ -203,5 +203,5 @@ impl Gate for RZ{
         ]
     }
     fn num_qubits(&self) -> usize {1}
-    fn name(&self) -> &'static str { "RX" }
+    fn name(&self) -> &'static str { "RZ" }
 }

@@ -45,5 +45,5 @@ let state_vector = ndarray::array![
 
 print_statevector(&state_vector.dot(&final_unitary));
 
-    //yew::Renderer::<App>::new().render();
+    yew::Renderer::<App>::new().render();
 }
