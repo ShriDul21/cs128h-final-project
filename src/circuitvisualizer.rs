@@ -36,13 +36,39 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 }
             }
             "CNOT" => {
-                if gate.targets.len() >= 2 {
-                    let control = gate.targets[0];
-                    let target = gate.targets[1];
+                let control = gate.targets[0];
+                let target = gate.targets[1];
 
-                    if control < qubits { timeline[control][t] = Cell::Control; }
-                    if target < qubits { timeline[target][t] = Cell::Target; }
-                }
+                timeline[control][i] = Cell::Control;
+                timeline[target][i] = Cell::Gate("CNOT".to_owned());
+            }
+            "Y" => {
+                let q = gate.targets[0];
+                timeline[q][i] = Cell::Gate("Y".into());
+
+            }
+            "CY" => {
+                let control = gate.targets[0];
+                let target = gate.targets[1];
+
+                timeline[control][i] = Cell::Control;
+                timeline[target][i] = Cell::Gate("CY".to_owned());
+            }
+            "CZ" => {
+                let control = gate.targets[0];
+                let target = gate.targets[1];
+
+                timeline[control][i] = Cell::Control;
+                timeline[target][i] = Cell::Gate("CZ".to_owned());
+            }
+            "CCZ" => {
+                let control_1 = gate.targets[0];
+                let control_2 = gate.targets[1];
+                let target = gate.targets[2];
+
+                timeline[control_1][i] = Cell::Control;
+                timeline[control_2][i] = Cell::Control;
+                timeline[target][i] = Cell::Gate("Z".to_owned());
             }
             other => {
                 if let Some(&q) = gate.targets.first() {
