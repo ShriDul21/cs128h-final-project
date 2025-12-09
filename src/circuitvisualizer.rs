@@ -51,19 +51,52 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 let control = gate.targets[0];
                 let target = gate.targets[1];
 
+				if control >= qubits || target >= qubits || control == target {
+					continue;
+				}
+
+
                 timeline[control][t] = Cell::Control;
                 timeline[target][t] = Cell::Gate("CNOT".to_owned());
             }
+			"CZ" => {
+				let control = gate.targets[0];
+				let target = gate.targets[1];
+
+				if control >= qubits || target >= qubits || control == target {
+					continue;
+				}
+
+				timeline[control][t] = Cell::Control;
+				timeline[target][t] = Cell::Gate("CZ".to_owned());
+			}
+			"CY" => {
+				let control = gate.targets[0];
+				let target = gate.targets[1];
+				if control >= qubits || target >= qubits || control == target {
+					continue;
+				}	
+				timeline[control][t] = Cell::Control;
+				timeline[target][t] = Cell::Gate("CY".to_owned());
+			}
             "CRX" => {
                 let control_1 = gate.targets[0];
                 let target = gate.targets[1];
 
+				if control_1 >= qubits || target >= qubits || control_1 == target {
+					continue;
+				}
+
                 timeline[control_1][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("RX".to_owned());
+                timeline[target][t] = Cell::Gate("CRX".to_owned());
             }
             "CRY" => {
                 let control = gate.targets[0];
                 let target = gate.targets[1];
+
+				if control >= qubits || target >= qubits || control == target {
+					continue;
+				}
 
                 timeline[control][t] = Cell::Control;
                 timeline[target][t] = Cell::Gate("CRY".to_owned());
@@ -72,6 +105,10 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 let control = gate.targets[0];
                 let target = gate.targets[1];
 
+				if control >= qubits || target >= qubits || control == target {
+					continue;
+				}
+
                 timeline[control][t] = Cell::Control;
                 timeline[target][t] = Cell::Gate("CRZ".to_owned());
             }
@@ -79,6 +116,11 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 let control_1 = gate.targets[0];
                 let control_2 = gate.targets[1];
                 let target = gate.targets[2];
+
+				if control_1 >= qubits || control_2 >= qubits || target >= qubits ||
+				   control_1 == control_2 || control_1 == target || control_2 == target {
+					continue;
+				}
 
                 timeline[control_1][t] = Cell::Control;
                 timeline[control_2][t] = Cell::Control;
