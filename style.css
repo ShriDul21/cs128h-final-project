@@ -15,3 +15,44 @@ button{
 	color: white;
 	cursor: pointer;
 }
+
+.circuit {
+    font-family: monospace;
+    padding: 10px;
+}
+
+.wire-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.q-label {
+    width: 40px;
+    font-weight: bold;
+}
+
+.cell {
+    width: 40px;
+    height: 26px;
+    border-bottom: 2px solid #444;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cell.gate {
+    border: 2px solid #000;
+    border-radius: 4px;
+    background: #ddd;
+}
+
+.cell.control {
+    font-size: 20px;
+}
+
+.cell.target {
+    font-size: 20px;
+}
+
+

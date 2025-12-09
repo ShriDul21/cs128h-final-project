@@ -1,5 +1,6 @@
 use crate::gates::Gate;
 #[derive(Clone)]
+#[derive(Debug)]
 
 pub struct GateInstance {
     //the time it acts on

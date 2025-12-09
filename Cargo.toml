@@ -9,4 +9,5 @@ js-sys = "0.3.83"
 ndarray = { version = "0.15" }
 ndarray-einsum = "0.8.0"
 num-complex = "0.4"
+web-sys = "0.3.83"
 yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
