@@ -8,8 +8,6 @@ use num_complex::Complex;
 use crate::circuitvisualizer::{build_timeline, render_circuit};
 
 #[derive(Clone)]
-
-
 pub enum Msg {
     SetQubits(String),
     AddH(usize),
@@ -45,6 +43,7 @@ impl Component for App {
             }
 
             Msg::AddH(target) => {
+				//view_gate_panel(&self, ctx);
                 self.gates.push(GateInstance::new(
                     self.gates.len(),
                     vec![target],
@@ -85,6 +84,7 @@ impl Component for App {
 	
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+
         let link = ctx.link();
 
         html! {

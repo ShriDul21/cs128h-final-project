@@ -5,6 +5,7 @@ pub mod timestep;
 pub mod utils;
 pub mod app; 
 pub mod circuitvisualizer;
+//pub mod gateselect;
 
 use app::App;
 
