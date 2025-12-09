@@ -205,3 +205,60 @@ impl Gate for RZ{
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "RZ" }
 }
+
+#[derive(Clone, Debug)]
+pub struct CRX{
+    pub theta: f64
+}
+impl Gate for CRX{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0,0.0), Complex::new(0.0,0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).cos(), 0.0), Complex::new(0.0, -(self.theta / 2.0).sin())], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, -(self.theta / 2.0).sin()), Complex::new((self.theta / 2.0).cos(), 0.0)] 
+        ]
+
+    }
+    fn num_qubits(&self) -> usize {2}
+    fn name(&self) -> &'static str { "CRX" }
+}
+
+#[derive(Clone, Debug)]
+pub struct CRY{
+    pub theta: f64
+}
+impl Gate for CRY{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0,0.0), Complex::new(0.0,0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).cos(), 0.0), Complex::new(-(self.theta / 2.0).sin(), 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).sin(), 0.0), Complex::new((self.theta / 2.0).cos(), 0.0)] 
+        ]
+
+    }
+    fn num_qubits(&self) -> usize {2}
+    fn name(&self) -> &'static str { "CRY" }
+}
+
+#[derive(Clone, Debug)]
+pub struct CRZ{
+    pub theta: f64
+}
+impl Gate for CRZ{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0,0.0), Complex::new(0.0,0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).cos(), -(self.theta / 2.0).sin()), Complex::new(0.0, 0.0)], 
+           [Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new((self.theta / 2.0).cos(), (self.theta / 2.0).sin())] 
+        ]
+
+    }
+    fn num_qubits(&self) -> usize {2}
+    fn name(&self) -> &'static str { "CRZ" }
+}
