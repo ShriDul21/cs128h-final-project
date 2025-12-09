@@ -14,7 +14,6 @@ h1 {
     text-align: center;
     margin-top: 50px;
     font-size: 3rem;
-    /* Reduced from 100px for cleaner look */
     letter-spacing: -2px;
     background: linear-gradient(135deg, #b06aff 0%, #5d00ff 100%);
     -webkit-background-clip: text;
@@ -82,18 +81,15 @@ button {
     font-weight: 600;
     color: #fff;
     background: #1e1e1e;
-    /* Match panel or slightly lighter */
     border: none;
     border-radius: 8px;
     cursor: pointer;
     margin: 10px;
     overflow: hidden;
-    /* Needed for some internal effects, but hinders outer glow? No */
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 1;
 }
 
-/* The travelling light effect container (pseudo-element) */
 button::before {
     content: "";
     position: absolute;
@@ -109,16 +105,12 @@ button::before {
     animation: rotateRing 4s linear infinite;
 }
 
-/* Inner blackout to create the "border" effect */
 button::after {
     content: "";
     position: absolute;
     inset: 2px;
-    /* Border thickness */
     background: #252525;
-    /* Inner button color */
     border-radius: 6px;
-    /* slightly smaller radius */
     z-index: -1;
 }
 
@@ -152,7 +144,6 @@ button.run::before {
 /* Circuit Styles */
 .circuit {
     font-family: 'Fira Code', monospace;
-    /* Nicer font for code/circuit */
     padding: 10px;
     min-width: max-content;
 }
@@ -178,50 +169,89 @@ button.run::before {
     color: #888;
 }
 
+/* CELL & WIRE STYLES */
 .cell {
     width: 44px;
     height: 44px;
-    border-bottom: 2px solid #555;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-right: 4px;
     position: relative;
     box-sizing: border-box;
-    transition: background-color 0.2s;
+    /* Transparent background for cell, wire will go through */
 }
 
+/* The Wire - Centered vertically */
+.cell::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #555;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+
+/* Hover effect on empty cells */
 .cell.empty:hover {
-    background-color: rgba(124, 77, 255, 0.15);
+    background-color: rgba(124, 77, 255, 0.1);
     cursor: pointer;
     border-radius: 4px;
 }
 
-.cell.gate {
+/* Gate Content - The actual Box sitting on the wire */
+.gate-content {
+    position: relative;
+    z-index: 10;
+    /* Above the wire */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.cell.gate .gate-content {
     border: 1px solid #7c4dff;
     border-radius: 8px;
     background: #2c2936;
+    /* Opaque background hides wire behind it */
     color: #e0e0e0;
     font-weight: bold;
-    z-index: 10;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-.cell.control {
+.cell.control .gate-content {
     font-size: 24px;
-    z-index: 10;
     color: #7c4dff;
     text-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+    background: #181818;
+    /* Small background to cover wire behind dot? */
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    /* Often for control dots, we WANT the wire to go through.
+       If we want wire through, make background transparent. */
+    background: transparent;
 }
 
-.cell.target {
+.cell.target .gate-content {
     font-size: 24px;
-    z-index: 10;
     color: #7c4dff;
     text-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+    background: #181818;
+    /* Cover wire for readability of plus? */
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    /* Usually target is a circle on wider wire. Opaque circle looks best. */
 }
 
 
+/* Toolbox */
 .toolbox {
     display: flex;
     gap: 15px;
@@ -266,6 +296,7 @@ button.run::before {
 }
 
 
+/* Results & Histogram */
 .statevector-container {
     display: flex;
     flex-direction: column;
@@ -343,6 +374,7 @@ button.run::before {
 }
 
 
+/* Histogram Chart */
 .histogram-section {
     margin-top: 40px;
 }

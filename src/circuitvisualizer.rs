@@ -193,13 +193,19 @@ pub fn render_circuit(timeline: &Timeline, on_drop: Callback<(usize, usize, Stri
                                             <div class="cell empty" {ondragover} {ondrop}></div> 
                                         },
                                         Cell::Gate(name) => html! { 
-                                            <div class="cell gate" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ name }</div> 
+                                            <div class="cell gate" {ondragover} {ondrop} {ondblclick} title="Double click to delete">
+                                                <span class="gate-content">{ name }</span>
+                                            </div> 
                                         },
                                         Cell::Control => html! { 
-                                            <div class="cell control" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ "●" }</div> 
+                                            <div class="cell control" {ondragover} {ondrop} {ondblclick} title="Double click to delete">
+                                                <span class="gate-content">{ "●" }</span>
+                                            </div> 
                                         },
                                         Cell::Target => html! { 
-                                            <div class="cell target" {ondragover} {ondrop} {ondblclick} title="Double click to delete">{ "⊕" }</div> 
+                                            <div class="cell target" {ondragover} {ondrop} {ondblclick} title="Double click to delete">
+                                                <span class="gate-content">{ "⊕" }</span>
+                                            </div> 
                                         },
                                     }
                                 })
