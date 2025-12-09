@@ -8,20 +8,24 @@ use num_complex::Complex;
 use crate::circuitvisualizer::{build_timeline, render_circuit};
 
 #[derive(Clone)]
-
-
 pub enum Msg {
     SetQubits(String),
     AddH(usize),
     AddCNOT(usize, usize),
     Run,
     AddGateAt(String, usize, usize), // (Gate Name, Qubit Index, Time Step)
+	SetControl1(String),
+	SetControl2(String),
+	SetTarget(String),
 }
 
 pub struct App {
     qubits: usize,
     gates: Vec<GateInstance>,
     result_state: Option<Vec<Complex<f64>>>,
+	control1: usize,
+	control2: usize,
+	target: usize,
 }
 
 impl Component for App {
@@ -33,6 +37,9 @@ impl Component for App {
             qubits: 2,
             gates: vec![],
             result_state: None,
+			control1: 0,
+			control2: 0,
+			target: 0,
         }
     }
 
@@ -45,7 +52,29 @@ impl Component for App {
                 true
             }
 
+            Msg::SetControl1(v) => {
+                if let Ok(c1) = v.parse::<usize>() {
+                    self.control1 = c1;
+                }
+                true
+            }
+
+            Msg::SetControl2(v) => {
+                if let Ok(c2) = v.parse::<usize>() {
+                    self.control2 = c2;
+                }
+                true
+            }
+
+            Msg::SetTarget(v) => {
+                if let Ok(t) = v.parse::<usize>() {
+                    self.target = t;
+                }
+                true
+            }
+
             Msg::AddH(target) => {
+				//view_gate_panel(&self, ctx);
                 self.gates.push(GateInstance::new(
                     self.gates.len(),
                     vec![target],
@@ -62,6 +91,7 @@ impl Component for App {
                 ));
                 true
             }
+			
 
             Msg::Run => {
                 console::log!("Running quantum circuit…");
@@ -124,7 +154,11 @@ impl Component for App {
 	
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+
         let link = ctx.link();
+		let control1 = self.control1;
+		let control2 = self.control2;
+		let target = self.target;
 
         html! {
             <div class="app">
@@ -144,6 +178,51 @@ impl Component for App {
                     />
                 </div>
 
+				// ---- Control 1 ----
+                <div class="panel">
+                    <label>{ "Control 1: " }</label>
+                    <input
+                        type="number"
+                        min="1"
+						max={(self.qubits).to_string()}
+                        value={self.control1.to_string()}
+                        oninput={link.callback(|e: web_sys::InputEvent| {
+                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                            Msg::SetControl1(input.value())
+                        })}
+                    />
+                </div>
+
+				// ---- Control 2 ----
+                <div class="panel">
+                    <label>{ "Control 2 (For Toffoli): " }</label>
+                    <input
+                        type="number"
+                        min="1"
+						max={(self.qubits).to_string()}
+                        value={self.control2.to_string()}
+                        oninput={link.callback(|e: web_sys::InputEvent| {
+                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                            Msg::SetControl2(input.value())
+                        })}
+                    />
+                </div>
+
+				// ---- Control 2 ----
+                <div class="panel">
+                    <label>{ "Target: " }</label>
+                    <input
+                        type="number"
+                        min="1"
+						max={(self.qubits).to_string()}
+                        value={self.target.to_string()}
+                        oninput={link.callback(|e: web_sys::InputEvent| {
+                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                            Msg::SetTarget(input.value())
+                        })}
+                    />
+                </div>
+
                 // ---- Gate Toolbox (Drag & Drop) ----
                 <div class="panel">
                     <h3>{ "Gate Toolbox" }</h3>
@@ -155,6 +234,7 @@ impl Component for App {
                             ondragstart={Callback::from(|e: DragEvent| {
                                 e.data_transfer().unwrap().set_data("application/x-gate", "H").unwrap();
                             })}
+							onclick={link.callback(move |_| Msg::AddH(target))}  // Add H gate to qubit 0 on click
                         >
                             { "H" }
                         </div>
@@ -164,6 +244,7 @@ impl Component for App {
                             ondragstart={Callback::from(|e: DragEvent| {
                                 e.data_transfer().unwrap().set_data("application/x-gate", "CNOT").unwrap();
                             })}
+							onclick={link.callback(move |_| Msg::AddCNOT(control1, target))}  // Add CNOT gate to qubit 0 on click
                         >
                             { "CNOT" }
                         </div>

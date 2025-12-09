@@ -34,9 +34,7 @@ impl Clone for Box<dyn Gate> {
 
 // identity gate
 #[derive(Clone, Debug)]
-pub struct I{
-    theta : f64
-}
+pub struct I;
 
 impl Gate for I {
     fn matrix(&self) -> Array2<Complex<f64>> {
