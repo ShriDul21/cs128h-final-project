@@ -124,6 +124,19 @@ impl Gate for Y{
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "Y" }
 }
+#[derive(Clone, Debug)]
+pub struct Z;
+impl Gate for Z{
+    fn matrix(&self) -> Array2<Complex<f64>>{
+        ndarray::array![
+           [Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)],
+           [Complex::new(0.0, 0.0), Complex::new(-1.0, 0.0)]
+        ]
+        
+    }
+    fn num_qubits(&self) -> usize {1}
+    fn name(&self) -> &'static str { "Z" }
+}
 
 #[derive(Clone, Debug)]
 pub struct CY;

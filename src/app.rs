@@ -3,7 +3,7 @@ use gloo::console;
 
 use crate::circuit::Circuit;
 use crate::gateinstance::GateInstance;
-use crate::gates::{H, CNOT};
+use crate::gates::{H, CNOT, CRX, CRY, CRZ, Z, X, Y, RX, RY, RZ, CCZ};
 use num_complex::Complex;
 use crate::circuitvisualizer::{build_timeline, render_circuit};
 
@@ -214,7 +214,7 @@ impl Component for App {
                 // Remove existing gates at this time that overlap with the new gate's target
                 // For simplicity, H takes 1 qubit. CNOT takes 2.
                 let mut targets = vec![qubit];
-                if name == "CNOT" {
+                if name == "CNOT" || name == "CRX" || name == "CRY" || name == "CRZ" {
                     if qubit + 1 < self.qubits {
                         targets.push(qubit + 1);
                     } else if qubit > 0 {
@@ -224,6 +224,18 @@ impl Component for App {
                         return false; 
                     }
                 }
+				if name == "CCZ" {
+					if qubit + 2 < self.qubits {
+						targets.push(qubit + 1);
+						targets.push(qubit + 2);
+					} else if qubit > 1 {
+						targets.push(qubit - 1);
+						targets.push(qubit - 2);
+					} else {
+						// Can't place CCZ on less than 3 qubits or edge case
+						return false; 
+					}
+				}
 
                 // Remove checks
                 self.gates.retain(|g| {
@@ -237,8 +249,18 @@ impl Component for App {
 
                 let gate_obj: Box<dyn crate::gates::Gate> = match name.as_str() {
                     "H" => Box::new(H),
+					"X" => Box::new(X),
+					"Y" => Box::new(Y),
+					"Z" => Box::new(Z),
+					"RX" => Box::new(RX{theta: self.rotation_angle}),
+					"RY" => Box::new(RY{theta: self.rotation_angle}),
+					"RZ" => Box::new(RZ{theta: self.rotation_angle}),
                     "CNOT" => Box::new(CNOT),
-                    _ => return false,
+					"CRX" => Box::new(CRX{theta: self.rotation_angle}),
+					"CRY" => Box::new(CRY{theta: self.rotation_angle}),
+					"CRZ" => Box::new(CRZ{theta: self.rotation_angle}),
+                    "CCZ" => Box::new(CCZ),
+					_ => return false,
                 };
 
                 self.gates.push(GateInstance::new(time, targets, gate_obj));
@@ -257,6 +279,7 @@ impl Component for App {
 		let control1 = self.control1;
 		let control2 = self.control2;
 		let target = self.target;
+		let rotation_angle = self.rotation_angle;
 
         html! {
             <div class="app">
@@ -306,7 +329,7 @@ impl Component for App {
                     />
                 </div>
 
-				// ---- Control 2 ----
+				// ---- Target ----
                 <div class="panel">
                     <label>{ "Target: " }</label>
                     <input
@@ -321,11 +344,56 @@ impl Component for App {
                     />
                 </div>
 
+				// ---- Target ----
+                <div class="panel">
+                    <label>{ "Rotation Angle: " }</label>
+                    <input
+                        type="number"
+                        min="0"
+                        value={self.rotation_angle.to_string()}
+                        oninput={link.callback(|e: web_sys::InputEvent| {
+                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                            Msg::SetRotationAngle(input.value())
+                        })}
+                    />
+                </div>
+
                 // ---- Gate Toolbox (Drag & Drop) ----
                 <div class="panel">
                     <h3>{ "Gate Toolbox" }</h3>
                     <p class="instruction-text">{ "Drag gates onto the circuit below:" }</p>
                     <div class="toolbox">
+						 <div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "X").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddX(target))}  
+                        >
+							{ "X" }
+                        </div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "Y").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddY(target))}  
+						>	
+							{ "Y" }
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "Z").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddZ(target))}  
+						>	
+							{ "Z" }
+						</div>
+
                         <div 
                             class="toolbox-item" 
                             draggable="true" 
@@ -336,6 +404,37 @@ impl Component for App {
                         >
                             { "H" }
                         </div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "RX").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddRX(rotation_angle, target))}  // Add RX gate to qubit 0 on click
+						>	
+							{ "RX" }
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "RY").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddRY(rotation_angle, target))}  // Add RY gate to qubit 0 on click
+						>	
+							{ "RY" }
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "RZ").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddRZ(rotation_angle, target))}  // Add RZ gate to qubit 0 on click
+						>	
+							{ "RZ" }
+						</div>
+						
                         <div 
                             class="toolbox-item" 
                             draggable="true" 
@@ -346,6 +445,46 @@ impl Component for App {
                         >
                             { "CNOT" }
                         </div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CRX").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCRX(rotation_angle, control1, target))}  // Add CRX gate to qubits on click
+						>	
+							{ "CRX" }
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CRY").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCRY(rotation_angle, control1, target))}  // Add CRY gate to qubits on click
+						>	
+							{ "CRY" }
+						</div>
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CRZ").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCRZ(rotation_angle, control1, target))}  // Add CRZ gate to qubits on click
+						>	
+							{ "CRZ" }
+						</div>
+						
+						<div 
+							class="toolbox-item" 
+							draggable="true" 
+							ondragstart={Callback::from(|e: DragEvent| {
+								e.data_transfer().unwrap().set_data("application/x-gate", "CCZ").unwrap();
+							})}
+							onclick={link.callback(move |_| Msg::AddCCZ(control1, control2, target))}  // Add CCZ gate to qubits on click
+						>	
+							{ "CCZ" }
                     </div>
                 </div>
 
@@ -433,6 +572,8 @@ impl Component for App {
                     }
                 </div>
             </div>
+			</div>
         }
+		
     }
 }
