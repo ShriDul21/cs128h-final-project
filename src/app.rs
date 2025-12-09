@@ -25,13 +25,23 @@ pub enum Msg {
 	AddCRZ(f64, usize, usize),
 	AddCCZ(usize, usize, usize),
     Run,
-    AddGateAt(String, usize, usize), // (Gate Name, Qubit Index, Time Step)
+    AddGateAt(String, usize, usize), // (gate name, qubit index, time step)
 	SetControl1(String),
 	SetControl2(String),
 	SetTarget(String),
 
-	SetRotationAngle(String),
-    RemoveGateAt(usize, usize), // (Qubit Index, Time Step)
+	SetRotationAngle(String), 
+    RemoveGateAt(usize, usize), // (qubit index, time step)
+    
+    // selection + editing
+    SelectGate(usize),
+    DeselectGate,
+    DeleteSelectedGate,
+    DeleteGate(usize), // Explicit deletion by index
+    MoveGate(usize, isize, usize), // (idx, delta_rows, new_time)
+    UpdateSelectedGateAngle(String),
+    UpdateSelectedControl(usize, String), // (index in targets, new_qubit_val)
+    UpdateSelectedTarget(usize, String),  // (index in targets, new_qubit_val)
 }
 
 pub struct App {
@@ -42,6 +52,7 @@ pub struct App {
 	control2: usize,
 	target: usize,
 	rotation_angle: f64,
+    selected_gate: Option<usize>,
 }
 
 impl Component for App {
@@ -57,6 +68,7 @@ impl Component for App {
 			control2: 0,
 			target: 0,
 			rotation_angle: 0.0,
+            selected_gate: None,
         }
     }
 
@@ -242,6 +254,7 @@ impl Component for App {
                     }
                     true
                 });
+                self.selected_gate = None;
                 self.result_state = None; // Reset results
                 true
             }
@@ -267,7 +280,6 @@ impl Component for App {
 
             Msg::AddGateAt(name, qubit, time) => {
                 // Remove existing gates at this time that overlap with the new gate's target
-                // For simplicity, H takes 1 qubit. CNOT takes 2.
                 let mut targets = vec![qubit];
                 if name == "CNOT" || name == "CRX" || name == "CRY" || name == "CRZ" || name == "CZ"  || name == "CY" {
                     if qubit + 1 < self.qubits {
@@ -302,6 +314,7 @@ impl Component for App {
                     }
                     true
                 });
+                self.selected_gate = None;
 
                 let gate_obj: Box<dyn crate::gates::Gate> = match name.as_str() {
                     "H" => Box::new(H),
@@ -327,6 +340,140 @@ impl Component for App {
                 self.result_state = None; 
                 true
             }
+
+
+            Msg::SelectGate(idx) => {
+                if idx < self.gates.len() {
+                    self.selected_gate = Some(idx);
+                }
+                true
+            }
+            Msg::DeselectGate => {
+                self.selected_gate = None;
+                true
+            }
+            Msg::DeleteSelectedGate => {
+                if let Some(idx) = self.selected_gate {
+                    if idx < self.gates.len() {
+                        self.gates.remove(idx);
+                        self.selected_gate = None;
+                        self.result_state = None;
+                    }
+                }
+                true
+            }
+            Msg::DeleteGate(idx) => {
+                 gloo::console::log!(format!("DeleteGate: idx={}, gates_len={}", idx, self.gates.len()));
+                 if idx < self.gates.len() {
+                    self.gates.remove(idx);
+                    // If deleted gate was selected, deselect
+                    if self.selected_gate == Some(idx) {
+                        self.selected_gate = None;
+                    } else if let Some(selected) = self.selected_gate {
+                        // adjust index if needed
+                        if idx < selected {
+                            self.selected_gate = Some(selected - 1);
+                        }
+                    }
+                    self.result_state = None;
+                 } else {
+                     gloo::console::error!("DeleteGate index out of bounds");
+                 }
+                true
+            }
+            Msg::MoveGate(idx, delta, new_time) => {
+                 if idx < self.gates.len() {
+                    let mut gate = self.gates[idx].clone();
+                    
+                    // Validate new targets
+                    let mut valid = true;
+                    let mut new_targets = vec![];
+                    for &t in &gate.targets {
+                        let new_t = t as isize + delta;
+                        if new_t < 0 || new_t >= self.qubits as isize {
+                            valid = false;
+                            break;
+                        }
+                        new_targets.push(new_t as usize);
+                    }
+
+                    if valid {
+                        // Remove old gate
+                        self.gates.remove(idx);
+                        
+                        // Clean up collisions at new spot
+                        let time = new_time;
+                         self.gates.retain(|g| {
+                            if g.time != time { return true; }
+                            for t in &g.targets {
+                                if new_targets.contains(t) { return false; }
+                            }
+                            true
+                        });
+
+                        gate.targets = new_targets;
+                        gate.time = time;
+                        self.gates.push(gate);
+                        
+                         self.selected_gate = None;
+                         self.result_state = None;
+                    }
+                 }
+                true
+            }
+            Msg::UpdateSelectedGateAngle(val) => {
+                if let (Some(idx), Ok(angle)) = (self.selected_gate, val.parse::<f64>()) {
+                     if let Some(gate_inst) = self.gates.get_mut(idx) {
+                         let name = gate_inst.gate.name();
+                         let new_gate: Box<dyn crate::gates::Gate> = match name {
+                             "RX" => Box::new(RX{theta: angle}),
+                             "RY" => Box::new(RY{theta: angle}),
+                             "RZ" => Box::new(RZ{theta: angle}),
+                             "CRX" => Box::new(CRX{theta: angle}),
+                             "CRY" => Box::new(CRY{theta: angle}),
+                             "CRZ" => Box::new(CRZ{theta: angle}),
+                             _ => return false, // Not a rotation gate
+                         };
+                         gate_inst.gate = new_gate;
+                         self.result_state = None;
+                     }
+                }
+                true
+            }
+            Msg::UpdateSelectedControl(ctrl_idx, val) => {
+                 if let (Some(idx), Ok(q)) = (self.selected_gate, val.parse::<usize>()) {
+                    if let Some(gate_inst) = self.gates.get_mut(idx) {
+                        if ctrl_idx < gate_inst.targets.len() {
+                             // Check if q is used by any OTHER target/control
+                             let already_used = gate_inst.targets.iter().enumerate()
+                                 .any(|(i, &existing)| i != ctrl_idx && existing == q);
+                             
+                             if !already_used {
+                                gate_inst.targets[ctrl_idx] = q;
+                                self.result_state = None;
+                             }
+                        }
+                    }
+                 }
+                 true
+            }
+            Msg::UpdateSelectedTarget(tgt_idx, val) => {
+                 if let (Some(idx), Ok(q)) = (self.selected_gate, val.parse::<usize>()) {
+                    if let Some(gate_inst) = self.gates.get_mut(idx) {
+                        if tgt_idx < gate_inst.targets.len() {
+
+                            let already_used = gate_inst.targets.iter().enumerate()
+                                 .any(|(i, &existing)| i != tgt_idx && existing == q);
+                             
+                             if !already_used {
+                                gate_inst.targets[tgt_idx] = q;
+                                self.result_state = None;
+                             }
+                        }
+                    }
+                 }
+                 true
+            }
         }
     }
 	
@@ -340,261 +487,162 @@ impl Component for App {
 		let rotation_angle = self.rotation_angle;
 
         html! {
-            <div class="app">
-                <h1>{ "Quantum Rust Simulator" }</h1>
+            <div class="app main-layout">
+                {
+                    if self.selected_gate.is_some() {
+                        html! { <div class="popup-backdrop" onclick={link.callback(|_| Msg::DeselectGate)}></div> }
+                    } else { html!{} }
+                }
+                <aside class="sidebar">
+                    <h1>{ "Quantum Rust" }</h1> 
 
-                // ---- Qubit Count ----
-                <div class="panel">
-                    <label>{ "Qubits: " }</label>
-                    <input
-                        type="number"
-                        min="1"
-                        value={self.qubits.to_string()}
-                        oninput={link.callback(|e: web_sys::InputEvent| {
-                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                            Msg::SetQubits(input.value())
-                        })}
-                    />
-                </div>
-
-				// ---- Control 1 ----
-                <div class="panel">
-                    <label>{ "Control 1: " }</label>
-                    <input
-                        type="number"
-                        min="1"
-						max={(self.qubits).to_string()}
-                        value={self.control1.to_string()}
-                        oninput={link.callback(|e: web_sys::InputEvent| {
-                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                            Msg::SetControl1(input.value())
-                        })}
-                    />
-                </div>
-
-				// ---- Control 2 ----
-                <div class="panel">
-                    <label>{ "Control 2 (For Toffoli): " }</label>
-                    <input
-                        type="number"
-                        min="1"
-						max={(self.qubits).to_string()}
-                        value={self.control2.to_string()}
-                        oninput={link.callback(|e: web_sys::InputEvent| {
-                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                            Msg::SetControl2(input.value())
-                        })}
-                    />
-                </div>
-
-				// ---- Target ----
-                <div class="panel">
-                    <label>{ "Target: " }</label>
-                    <input
-                        type="number"
-                        min="1"
-						max={(self.qubits).to_string()}
-                        value={self.target.to_string()}
-                        oninput={link.callback(|e: web_sys::InputEvent| {
-                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                            Msg::SetTarget(input.value())
-                        })}
-                    />
-                </div>
-
-				// ---- Target ----
-                <div class="panel">
-                    <label>{ "Rotation Angle: " }</label>
-                    <input
-                        type="number"
-                        min="0"
-                        value={self.rotation_angle.to_string()}
-                        oninput={link.callback(|e: web_sys::InputEvent| {
-                            let input: web_sys::HtmlInputElement = e.target_unchecked_into();
-                            Msg::SetRotationAngle(input.value())
-                        })}
-                    />
-                </div>
-
-                // ---- Gate Toolbox (Drag & Drop) ----
-                <div class="panel">
-                    <h3>{ "Gate Toolbox" }</h3>
-                    <p class="instruction-text">{ "Drag gates onto the circuit below:" }</p>
-                    <div class="toolbox">
-						 <div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "X").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddX(target))}  
-                        >
-							{ "X" }
-                        </div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "Y").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddY(target))}  
-						>	
-							{ "Y" }
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "Z").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddZ(target))}  
-						>	
-							{ "Z" }
-						</div>
-
-                        <div 
-                            class="toolbox-item" 
-                            draggable="true" 
-                            ondragstart={Callback::from(|e: DragEvent| {
-                                e.data_transfer().unwrap().set_data("application/x-gate", "H").unwrap();
-                            })}
-							onclick={link.callback(move |_| Msg::AddH(target))}  // Add H gate to qubit 0 on click
-                        >
-                            { "H" }
-                        </div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "RX").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddRX(rotation_angle, target))}  // Add RX gate to qubit 0 on click
-						>	
-							{ "RX" }
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "RY").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddRY(rotation_angle, target))}  // Add RY gate to qubit 0 on click
-						>	
-							{ "RY" }
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "RZ").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddRZ(rotation_angle, target))}  // Add RZ gate to qubit 0 on click
-						>	
-							{ "RZ" }
-						</div>
-						
-                        <div 
-                            class="toolbox-item" 
-                            draggable="true" 
-                            ondragstart={Callback::from(|e: DragEvent| {
-                                e.data_transfer().unwrap().set_data("application/x-gate", "CNOT").unwrap();
-                            })}
-							onclick={link.callback(move |_| Msg::AddCNOT(control1, target))}  // Add CNOT gate to qubit 0 on click
-                        >
-                            { "CNOT" }
+                    // ---- Input Controls Group ----
+                    <div class="sidebar-section">
+                        <h3>{ "Configuration" }</h3>
+                        <div class="control-group">
+                            <label>{ "Qubits" }</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={self.qubits.to_string()}
+                                oninput={link.callback(|e: web_sys::InputEvent| {
+                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                    Msg::SetQubits(input.value())
+                                })}
+                            />
                         </div>
 
-						<div
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CZ").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCZ(control1, target))}  // Add CZ gate to qubits on click
-							>
-							{ "CZ" }
-							
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CY").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCY(control1, target))}  // Add CY gate to qubits on click
-						>	
-							{ "CY" }
-						</div>
-
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CRX").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCRX(rotation_angle, control1, target))}  // Add CRX gate to qubits on click
-						>	
-							{ "CRX" }
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CRY").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCRY(rotation_angle, control1, target))}  // Add CRY gate to qubits on click
-						>	
-							{ "CRY" }
-						</div>
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CRZ").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCRZ(rotation_angle, control1, target))}  // Add CRZ gate to qubits on click
-						>	
-							{ "CRZ" }
-						</div>
-						
-						<div 
-							class="toolbox-item" 
-							draggable="true" 
-							ondragstart={Callback::from(|e: DragEvent| {
-								e.data_transfer().unwrap().set_data("application/x-gate", "CCZ").unwrap();
-							})}
-							onclick={link.callback(move |_| Msg::AddCCZ(control1, control2, target))}  // Add CCZ gate to qubits on click
-						>	
-							{ "CCZ" }
+                        <div class="control-group">
+                            <label>{ "Control 1" }</label>
+                            <input type="number" min="0" max={(self.qubits).to_string()} value={self.control1.to_string()}
+                                oninput={link.callback(|e: web_sys::InputEvent| {
+                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                    Msg::SetControl1(input.value())
+                                })}
+                            />
+                        </div>
+                        <div class="control-group">
+                            <label>{ "Control 2" }</label>
+                            <input type="number" min="0" max={(self.qubits).to_string()} value={self.control2.to_string()}
+                                oninput={link.callback(|e: web_sys::InputEvent| {
+                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                    Msg::SetControl2(input.value())
+                                })}
+                            />
+                        </div>
+                        <div class="control-group">
+                            <label>{ "Target" }</label>
+                            <input type="number" min="0" max={(self.qubits).to_string()} value={self.target.to_string()}
+                                oninput={link.callback(|e: web_sys::InputEvent| {
+                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                    Msg::SetTarget(input.value())
+                                })}
+                            />
+                        </div>
+                        <div class="control-group">
+                            <label>{ "Angle" }</label>
+                            <input type="number" min="0" value={self.rotation_angle.to_string()}
+                                oninput={link.callback(|e: web_sys::InputEvent| {
+                                    let input: web_sys::HtmlInputElement = e.target_unchecked_into();
+                                    Msg::SetRotationAngle(input.value())
+                                })}
+                            />
+                        </div>
                     </div>
-                </div>
 
-              				// ---- Circuit Preview ----
-				<div class="panel">
-				    <h3>{ "Circuit Preview" }</h3>
-				    <div class="circuit-container-scroll">
-				        { render_circuit(
-                            &build_timeline(self.qubits, &self.gates, 25), // Show at least 25 steps
-                            link.callback(|(q, t, g)| Msg::AddGateAt(g, q, t)),
-                            link.callback(|(q, t)| Msg::RemoveGateAt(q, t))
-                        ) }
-				    </div>
-				</div>
-                
-                // ---- Run ----
-                <button class="run" onclick={link.callback(|_| Msg::Run)}>
-                    { "Run Circuit" }
-                </button>
+                    // ---- Gate Toolbox ----
+                    <div class="sidebar-section">
+                        <h3>{ "Gates" }</h3>
+                        <p class="instruction-text">{ "Drag to circuit or use inputs above + click to add." }</p>
+                        <div class="toolbox">
+                            // single qubit gates
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "X").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddX(target))}>{ "X" }</div>
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "Y").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddY(target))}>{ "Y" }</div>
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "Z").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddZ(target))}>{ "Z" }</div>
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "H").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddH(target))}>{ "H" }</div>
+                            
+                            // rotation gates
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "RX").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddRX(rotation_angle, target))}>{ "RX" }</div>
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "RY").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddRY(rotation_angle, target))}>{ "RY" }</div>
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "RZ").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddRZ(rotation_angle, target))}>{ "RZ" }</div>
 
-                // ---- Result ----
-                <div class="result">
-                    <h3>{ "Output Statevector" }</h3>
-                    {
-                        if let Some(ref state) = self.result_state {
+                            // multi qubit gartes
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CNOT").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCNOT(control1, target))}>{ "CX" }</div>
+                                <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CY").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCY(control1, target))}>{ "CY" }</div>
+                                <div class="toolbox-item" draggable="true" 
+                                    ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CZ").unwrap(); })}
+                                    onclick={link.callback(move |_| Msg::AddCZ(control1, target))}>{ "CZ" }</div>
+                            
+                            // controlledrotation gates
+                             <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CRX").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCRX(rotation_angle, control1, target))}>{ "CRX" }</div>
+                             <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CRY").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCRY(rotation_angle, control1, target))}>{ "CRY" }</div>
+                             <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CRZ").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCRZ(rotation_angle, control1, target))}>{ "CRZ" }</div>
+
+                            <div class="toolbox-item" draggable="true" 
+                                ondragstart={Callback::from(|e: DragEvent| { e.data_transfer().unwrap().set_data("application/x-gate", "CCZ").unwrap(); })}
+                                onclick={link.callback(move |_| Msg::AddCCZ(control1, control2, target))}>{ "CCZ" }</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <main class="workspace">
+                    // ---- Circuit Area ----
+                    <div class="circuit-area">
+                        <div class="circuit-header">
+                            <h3>{ "Composer" }</h3>
+                             <button class="run" onclick={link.callback(|_| Msg::Run)}>
+                                { "Run Circuit" }
+                            </button>
+                        </div>
+                        <div class="circuit-container-scroll">
+                            { render_circuit(
+                                &build_timeline(self.qubits, &self.gates, 25), 
+                                &self.gates,
+                                self.selected_gate,
+                                link.callback(|(q, t, g)| Msg::AddGateAt(g, q, t)),
+                                link.callback(move |(idx, d, t)| Msg::MoveGate(idx, d, t)),
+                                link.callback(move |idx| Msg::DeleteGate(idx)), 
+                                link.callback(|idx| Msg::SelectGate(idx)),
+                                link.callback(|val| Msg::UpdateSelectedGateAngle(val)),
+                                link.callback(|(idx, val)| Msg::UpdateSelectedControl(idx, val)),
+                                link.callback(|(idx, val)| Msg::UpdateSelectedTarget(idx, val)),
+                            ) }
+                        </div>
+                    </div>
+
+                    // ---- Results Bottom Panel ----
+                    <div class="results-area">
+                        <h3>{ "Results" }</h3>
+                        {
+                            if let Some(ref state) = self.result_state {
                                 html! {
-                                    <div>
+                                    <div class="results-layout">
                                         <div class="histogram-section">
-                                            <h3>{ "Probability Distribution" }</h3>
+                                            <h4>{ "Probability Distribution" }</h4>
                                             <div class="histogram-container">
                                                 {
                                                     state.iter().enumerate()
@@ -619,7 +667,7 @@ impl Component for App {
 
                                         <div class="statevector-container">
                                             <div class="state-header">
-                                                <span class="col-basis">{ "Basis State" }</span>
+                                                <span class="col-basis">{ "State" }</span>
                                                 <span class="col-amp">{ "Amplitude" }</span>
                                                 <span class="col-prob">{ "Probability" }</span>
                                             </div>
@@ -628,7 +676,6 @@ impl Component for App {
                                                     let prob = c.norm_sqr();
                                                     let pct = prob * 100.0;
                                                     let bin = format!("{:0width$b}", i, width = self.qubits); 
-                                                    // Handle complex formatting nicely
                                                     let sign = if c.im >= 0.0 { "+" } else { "-" };
                                                     let amp_str = format!("{:.3} {} {:.3}i", c.re, sign, c.im.abs());
 
@@ -649,13 +696,26 @@ impl Component for App {
                                         </div>
                                     </div>
                                 }
-                        } else {
-                            html! { <p>{ "No results yet." }</p> }
+                            } else {
+                                // Empty state placeholder
+                                html! { 
+                                    <div class="empty-results">
+                                        <div class="placeholder-graph">
+                                            <div class="placeholder-bar" style="height: 20%"></div>
+                                            <div class="placeholder-bar" style="height: 50%"></div>
+                                            <div class="placeholder-bar" style="height: 30%"></div>
+                                        </div>
+                                        <p>{ "Run the circuit to see distribution and statevector." }</p>
+                                    </div> 
+                                }
+                            }
                         }
-                    }
-                </div>
+                    </div>
+                </main>
+
+
+            
             </div>
-			</div>
         }
 		
     }
