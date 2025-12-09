@@ -31,10 +31,22 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
         match name {
             "H" => {
                 let q = gate.targets[0];
-                if q < qubits {
-                    timeline[q][t] = Cell::Gate("H".into());
-                }
+				timeline[q][t] = Cell::Gate("H".into());
+			}
+			"X" => {
+				let q = gate.targets[0];
+				timeline[q][t] = Cell::Gate("X".into());
+
+			}
+            "Y" => {
+                let q = gate.targets[0];
+                timeline[q][t] = Cell::Gate("Y".into());
+
             }
+			"Z" => {
+				let q = gate.targets[0];
+				timeline[q][t] = Cell::Gate("Z".into());
+			}
             "CNOT" => {
                 let control = gate.targets[0];
                 let target = gate.targets[1];
@@ -42,24 +54,26 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
                 timeline[control][t] = Cell::Control;
                 timeline[target][t] = Cell::Gate("CNOT".to_owned());
             }
-            "Y" => {
-                let q = gate.targets[0];
-                timeline[q][t] = Cell::Gate("Y".into());
+            "CRX" => {
+                let control_1 = gate.targets[0];
+                let target = gate.targets[1];
 
+                timeline[control_1][t] = Cell::Control;
+                timeline[target][t] = Cell::Gate("RX".to_owned());
             }
-            "CY" => {
+            "CRY" => {
                 let control = gate.targets[0];
                 let target = gate.targets[1];
 
                 timeline[control][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("CY".to_owned());
+                timeline[target][t] = Cell::Gate("CRY".to_owned());
             }
-            "CZ" => {
+            "CRZ" => {
                 let control = gate.targets[0];
                 let target = gate.targets[1];
 
                 timeline[control][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("CZ".to_owned());
+                timeline[target][t] = Cell::Gate("CRZ".to_owned());
             }
             "CCZ" => {
                 let control_1 = gate.targets[0];
@@ -68,55 +82,19 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
 
                 timeline[control_1][t] = Cell::Control;
                 timeline[control_2][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("Z".to_owned());
+                timeline[target][t] = Cell::Gate("CCZ".to_owned());
             }
             "RX" => {
-                let control_1 = gate.targets[0];
-                let target = gate.targets[1];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("RX".to_owned());
+                let q = gate.targets[0];
+				timeline[q][t] = Cell::Gate("RX".into());
             }
-            "RY" => {
-                let control_1 = gate.targets[0];
-                let target = gate.targets[1];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("RY".to_owned());
+			"RY" => {
+				let q = gate.targets[0];
+				timeline[q][t] = Cell::Gate("RY".into());
             }
             "RZ" => {
-                let control_1 = gate.targets[0];
-                let target = gate.targets[1];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("RZ".to_owned());
-            }
-            "CRX" => {
-                let control_1 = gate.targets[0];
-                let control_2 = gate.targets[1];
-                let target = gate.targets[2];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[control_2][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("CRX".to_owned());
-            }
-            "CRY" => {
-                let control_1 = gate.targets[0];
-                let control_2 = gate.targets[1];
-                let target = gate.targets[2];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[control_2][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("CRY".to_owned());
-            }
-            "CRZ" => {
-                let control_1 = gate.targets[0];
-                let control_2 = gate.targets[1];
-                let target = gate.targets[2];
-
-                timeline[control_1][t] = Cell::Control;
-                timeline[control_2][t] = Cell::Control;
-                timeline[target][t] = Cell::Gate("CRZ".to_owned());
+                let q = gate.targets[0];
+				timeline[q][t] = Cell::Gate("RZ".into());
             }
             other => {
                 if let Some(&q) = gate.targets.first() {
