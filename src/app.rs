@@ -20,7 +20,7 @@ pub enum Msg {
 pub struct App {
     qubits: usize,
     gates: Vec<GateInstance>,
-    result_state: Option<String>,
+    result_state: Option<Vec<Complex<f64>>>,
 }
 
 impl Component for App {
@@ -76,7 +76,7 @@ impl Component for App {
                 let input = ndarray::Array2::from_shape_vec((1, dim), state).unwrap();
                 let out = input.dot(&final_u);
 
-                self.result_state = Some(format!("{:?}", out));
+                self.result_state = Some(out.iter().cloned().collect());
 
                 true
             }
@@ -134,8 +134,39 @@ impl Component for App {
                 <div class="result">
                     <h3>{ "Output Statevector" }</h3>
                     {
-                        if let Some(ref s) = self.result_state {
-                            html! { <pre>{ s }</pre> }
+                        if let Some(ref state) = self.result_state {
+                            html! {
+                                <div class="statevector-container">
+                                    <div class="state-header">
+                                        <span class="col-basis">{ "Basis State" }</span>
+                                        <span class="col-amp">{ "Amplitude" }</span>
+                                        <span class="col-prob">{ "Probability" }</span>
+                                    </div>
+                                    {
+                                        state.iter().enumerate().filter(|(_, c)| c.norm_sqr() > 0.00001).map(|(i, c)| {
+                                            let prob = c.norm_sqr();
+                                            let pct = prob * 100.0;
+                                            let bin = format!("{:0width$b}", i, width = self.qubits); 
+                                            // Handle complex formatting nicely
+                                            let sign = if c.im >= 0.0 { "+" } else { "-" };
+                                            let amp_str = format!("{:.3} {} {:.3}i", c.re, sign, c.im.abs());
+
+                                            html! {
+                                                <div class="state-row">
+                                                    <span class="col-basis">{ format!("|{}>", bin) }</span>
+                                                    <span class="col-amp">{ amp_str }</span>
+                                                    <div class="col-prob">
+                                                        <div class="prob-bar-bg">
+                                                            <div class="prob-bar-fill" style={format!("width: {:.2}%", pct)}></div>
+                                                        </div>
+                                                        <span class="prob-text">{ format!("{:.2}%", pct) }</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }).collect::<Html>()
+                                    }
+                                </div>
+                            }
                         } else {
                             html! { <p>{ "No results yet." }</p> }
                         }
