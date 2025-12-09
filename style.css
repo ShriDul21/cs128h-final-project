@@ -1,24 +1,26 @@
 h1 {
     font-weight: bold;
-	text-align: center;
-	margin-top: 50px;
-	font-size: 100px;
-	color:rgb(93, 0, 255);
+    text-align: center;
+    margin-top: 50px;
+    font-size: 100px;
+    color: rgb(93, 0, 255);
 }
-button{
-	font-size: 30px;
-	margin: 10px;
-	padding: 10px 20px;
-	border-radius: 5px;
-	border: none;
-	background-color: rgb(93, 0, 255);
-	color: white;
-	cursor: pointer;
+
+button {
+    font-size: 30px;
+    margin: 10px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: rgb(93, 0, 255);
+    color: white;
+    cursor: pointer;
 }
 
 .circuit {
     font-family: monospace;
     padding: 10px;
+    min-width: max-content;
 }
 
 .wire-row {
@@ -34,25 +36,230 @@ button{
 
 .cell {
     width: 40px;
-    height: 26px;
+    height: 40px;
     border-bottom: 2px solid #444;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-right: 2px;
+    position: relative;
+    box-sizing: border-box;
+    transition: background-color 0.2s;
+}
+
+.cell.empty {}
+
+.cell.empty:hover {
+    background-color: rgba(93, 0, 255, 0.1);
+    cursor: pointer;
 }
 
 .cell.gate {
     border: 2px solid #000;
     border-radius: 4px;
     background: #ddd;
+    font-weight: bold;
+    z-index: 1;
 }
 
 .cell.control {
-    font-size: 20px;
+    font-size: 24px;
+    z-index: 1;
 }
 
 .cell.target {
-    font-size: 20px;
+    font-size: 24px;
+    z-index: 1;
 }
 
+.statevector-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+}
 
+.state-header {
+    display: flex;
+    background-color: #eee;
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+}
+
+.state-row {
+    display: flex;
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+}
+
+.state-row:last-child {
+    border-bottom: none;
+}
+
+.state-row:hover {
+    background-color: #f0f0ff;
+}
+
+.col-basis {
+    width: 80px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.col-amp {
+    width: 250px;
+    font-family: monospace;
+    color: #555;
+}
+
+.col-prob {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.prob-bar-bg {
+    flex: 1;
+    height: 12px;
+    background-color: #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+.prob-bar-fill {
+    height: 100%;
+    background-color: rgb(93, 0, 255);
+}
+
+.prob-text {
+    width: 60px;
+    text-align: right;
+    font-size: 0.9em;
+    color: #333;
+}
+
+.histogram-section {
+    margin-top: 30px;
+}
+
+.histogram-container {
+    display: flex;
+    align-items: flex-end;
+    height: auto;
+    border-left: 2px solid #444;
+    border-bottom: 2px solid #444;
+    padding: 20px;
+    margin: 20px;
+    gap: 20px;
+    background-color: #fafafa;
+    overflow-x: auto;
+}
+
+.histogram-bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.histogram-chart-area {
+    height: 250px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    position: relative;
+}
+
+@keyframes barGrow {
+    from {
+        height: 0;
+    }
+
+    to {
+        height: var(--h);
+    }
+}
+
+.histogram-bar {
+    width: 100%;
+    background-color: rgb(93, 0, 255);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    height: var(--h);
+    animation: barGrow 1s ease-out;
+}
+
+.histogram-bar:hover {
+    background-color: rgb(120, 50, 255);
+}
+
+.histogram-value {
+    margin-bottom: 5px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #333;
+}
+
+.histogram-label {
+    margin-top: 8px;
+    font-family: monospace;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Toolbox & Scroll */
+.toolbox {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #f4f4f4;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+}
+
+.toolbox-item {
+    width: 60px;
+    height: 60px;
+    background-color: rgb(93, 0, 255);
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s;
+}
+
+.toolbox-item:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.circuit-container-scroll {
+    overflow-x: auto;
+    padding-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    padding: 20px;
+}
+
+.instruction-text {
+    margin-bottom: 10px;
+    color: #555;
+    font-style: italic;
+}
