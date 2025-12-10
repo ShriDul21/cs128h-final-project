@@ -1,6 +1,9 @@
 # Quantum Rust Setup
 
-*To simply view the compiled website, you can visit quantumrust.vercel.app or use a static file server on the /dist folder*
+*To simply view the compiled website, you can visit the website below or use a static file server on the /dist folder*
+```
+https://quantumrust.vercel.app/
+```
 
 *For developers, we proceed normally:*
 ```
