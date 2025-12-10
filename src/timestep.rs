@@ -50,13 +50,6 @@ fn gate_instance_matrix(_g: &GateInstance, num_qubits: usize) -> Array2<Complex<
             i += 1;
         }
     }
-    // for i in 0..num_qubits {
-    //     if _g.targets.contains(&i) {
-    //         mats.push(_g.gate.matrix());
-    //     } else {
-    //         mats.push(Array2::eye(2).mapv(|x| Complex::new(x, 0.0)));
-    //     }
-    // }
 
     let mut full = mats[0].clone();
     for m in mats.iter().skip(1) {
@@ -72,7 +65,7 @@ fn gate_instance_matrix(_g: &GateInstance, num_qubits: usize) -> Array2<Complex<
 }
 
 
-// permuting gate using bit masking -- before, i used eisensum but this is more efficient
+// permuting gate for arbitrary controls using bit masking -- before, i used eisensum but this is more efficient
 // i believe 
 pub fn permute_gate(
     matrix: Array2<Complex<f64>>,

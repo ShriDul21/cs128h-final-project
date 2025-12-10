@@ -7,9 +7,19 @@ use crate::gates::{H, CY, CZ, CNOT, CRX, CRY, CRZ, Z, X, Y, RX, RY, RZ, CCZ};
 use num_complex::Complex;
 use crate::circuitvisualizer::{build_timeline, render_circuit};
 
+// Frontend operates with Yew's struct components 
+
+// Define the possible messages which can be sent to the component to update its state via user inputs
 #[derive(Clone)]
 pub enum Msg {
+
+	// Configuration changes
     SetQubits(String),
+	SetControl1(String),
+	SetControl2(String),
+	SetTarget(String),
+	SetRotationAngle(String), 
+	// Adding gates to circuit
 	AddX(usize),
 	AddY(usize),
 	AddZ(usize),
@@ -24,16 +34,10 @@ pub enum Msg {
 	AddCRY(f64, usize, usize),
 	AddCRZ(f64, usize, usize),
 	AddCCZ(usize, usize, usize),
-    Run,
     AddGateAt(String, usize, usize), // (gate name, qubit index, time step)
-	SetControl1(String),
-	SetControl2(String),
-	SetTarget(String),
 
-	SetRotationAngle(String), 
+    // selection + editing for composer
     RemoveGateAt(usize, usize), // (qubit index, time step)
-    
-    // selection + editing
     SelectGate(usize),
     DeselectGate,
     DeleteSelectedGate,
@@ -42,8 +46,12 @@ pub enum Msg {
     UpdateSelectedGateAngle(String),
     UpdateSelectedControl(usize, String), // (index in targets, new_qubit_val)
     UpdateSelectedTarget(usize, String),  // (index in targets, new_qubit_val)
+
+	// Render measurement results
+    Run,
 }
 
+// We define a component struct to hold the overall state of our application
 pub struct App {
     qubits: usize,
     gates: Vec<GateInstance>,
@@ -59,6 +67,7 @@ impl Component for App {
     type Message = Msg;
     type Properties = ();
 
+	// Constructor for initial state
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             qubits: 2,
@@ -72,6 +81,7 @@ impl Component for App {
         }
     }
 
+	// Message handler to update state based on user actions and creates the actual HTML elements
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SetQubits(v) => {

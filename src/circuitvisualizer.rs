@@ -5,6 +5,7 @@ use gloo::console;
 
 #[derive(Clone)]
 
+// Represents a cell in the circuit diagram for visualization purposes
 pub enum Cell {
     Empty,
     Gate(usize, String),
@@ -17,6 +18,7 @@ pub type Timeline = Vec<Vec<Cell>>;
 // Outer vec = qubits
 // Inner vec = timeline positions for each gate index
 
+// Internal state of the circuit 
 pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize) -> Timeline {
     let max_time = gates.iter().map(|g| g.time).max().unwrap_or(0);
     // Ensure we have enough space, at least min_steps, and enough to cover the max_time
@@ -29,7 +31,7 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
         if t >= steps { continue; } // Should not happen given logic above
 
         let name = gate.gate.name(); 
-
+		// Assemble the gates into the timeline, ensuring controls are placed correctly
         match name {
             "H" => {
                 let q = gate.targets[0];
@@ -154,7 +156,7 @@ pub fn build_timeline(qubits: usize, gates: &Vec<GateInstance>, min_steps: usize
 }
 
 
-
+// Outputting the circuit diagram into HTML with interactive gates and drag-and-drop
 pub fn render_circuit(
     timeline: &Timeline, 
     gates: &Vec<GateInstance>,
@@ -171,6 +173,7 @@ pub fn render_circuit(
         <div class="circuit">
             {
                 for timeline.iter().enumerate().map(|(q, row)| {
+					// Clone callbacks for use in closures
                     let on_drop = on_drop.clone();
                     let on_move = on_move.clone();
                     let on_select = on_select.clone();
@@ -193,6 +196,7 @@ pub fn render_circuit(
                                         e.prevent_default();
                                     });
 
+									// Handle dropping gates onto cells
                                     let ondrop = Callback::from(move |e: DragEvent| {
                                         e.prevent_default();
                                         if let Some(dt) = e.data_transfer() {
@@ -234,6 +238,7 @@ pub fn render_circuit(
                                              let name_for_drag = name.clone(); 
                                              let is_selected = active_gate_idx == Some(idx);
                                              
+											 // Build the popup for editing gate properties
                                              let popup = if is_selected {
                                                  if let Some(gate_inst) = gates.get(idx) {
                                                      let is_rotation = ["RX", "RY", "RZ", "CRX", "CRY", "CRZ"].contains(&name.as_str());

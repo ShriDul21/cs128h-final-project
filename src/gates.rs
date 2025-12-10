@@ -82,7 +82,7 @@ impl Gate for H {
     fn num_qubits(&self) -> usize { 1 }
     fn name(&self) -> &'static str { "H" }
 }
-
+// X gate
 #[derive(Clone, Debug)]
 pub struct X;
 
@@ -97,7 +97,7 @@ impl Gate for X{
     fn num_qubits(&self) -> usize { 1 }
     fn name(&self) -> &'static str { "X" }
 }
-
+// CCZ gate
 #[derive(Clone, Debug)]
 pub struct CCZ;
 impl Gate for CCZ{
@@ -115,6 +115,7 @@ impl Gate for CCZ{
     fn name(&self) -> &'static str { "CCZ" }
 }
 
+// Y gate
 #[derive(Clone, Debug)]
 pub struct Y;
 impl Gate for Y{
@@ -129,6 +130,7 @@ impl Gate for Y{
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "Y" }
 }
+// Z gate
 #[derive(Clone, Debug)]
 pub struct Z;
 impl Gate for Z{
@@ -142,7 +144,7 @@ impl Gate for Z{
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "Z" }
 }
-
+// CY gate
 #[derive(Clone, Debug)]
 pub struct CY;
 impl Gate for CY{
@@ -160,6 +162,7 @@ impl Gate for CY{
     fn name(&self) -> &'static str { "CY" }
 }
 
+// CZ gate
 #[derive(Clone, Debug)]
 pub struct CZ;
 impl Gate for CZ{
@@ -177,6 +180,7 @@ impl Gate for CZ{
     fn name(&self) -> &'static str { "CZ" }
 }
 
+// RX gate
 #[derive(Clone, Debug)]
 pub struct RX{
     pub theta: f64
@@ -192,7 +196,7 @@ impl Gate for RX{
     fn name(&self) -> &'static str { "RX" }
     fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
-
+// RY gate
 #[derive(Clone, Debug)]
 pub struct RY{
     pub theta: f64
@@ -208,6 +212,7 @@ impl Gate for RY{
     fn name(&self) -> &'static str { "RY" }
     fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
+// RZ gate
 
 #[derive(Clone, Debug)]
 pub struct RZ{
@@ -244,6 +249,7 @@ impl Gate for CRX{
     fn name(&self) -> &'static str { "CRX" }
     fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
+// CRY gate
 
 #[derive(Clone, Debug)]
 pub struct CRY{
@@ -264,7 +270,7 @@ impl Gate for CRY{
     fn name(&self) -> &'static str { "CRY" }
     fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
-
+// CRZ gate
 #[derive(Clone, Debug)]
 pub struct CRZ{
     pub theta: f64
