@@ -11,6 +11,10 @@ pub trait Gate: GateClone + Debug {
 
     // string name of gate
     fn name(&self) -> &'static str;
+    
+    fn angle(&self) -> Option<f64> {
+        None
+    }
 }
 
 pub trait GateClone {
@@ -186,6 +190,7 @@ impl Gate for RX{
     }
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "RX" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
 
 #[derive(Clone, Debug)]
@@ -201,6 +206,7 @@ impl Gate for RY{
     }
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "RY" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
 
 #[derive(Clone, Debug)]
@@ -216,6 +222,7 @@ impl Gate for RZ{
     }
     fn num_qubits(&self) -> usize {1}
     fn name(&self) -> &'static str { "RZ" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
 
 #[derive(Clone, Debug)]
@@ -235,6 +242,7 @@ impl Gate for CRX{
     }
     fn num_qubits(&self) -> usize {2}
     fn name(&self) -> &'static str { "CRX" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
 
 #[derive(Clone, Debug)]
@@ -254,6 +262,7 @@ impl Gate for CRY{
     }
     fn num_qubits(&self) -> usize {2}
     fn name(&self) -> &'static str { "CRY" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }
 
 #[derive(Clone, Debug)]
@@ -273,4 +282,5 @@ impl Gate for CRZ{
     }
     fn num_qubits(&self) -> usize {2}
     fn name(&self) -> &'static str { "CRZ" }
+    fn angle(&self) -> Option<f64> { Some(self.theta) }
 }

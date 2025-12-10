@@ -436,6 +436,7 @@ impl Component for App {
                          };
                          gate_inst.gate = new_gate;
                          self.result_state = None;
+                        //  gloo::console::log!(format!("gate angle updated to {}", angle));
                      }
                 }
                 true

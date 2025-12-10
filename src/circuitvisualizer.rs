@@ -256,23 +256,44 @@ pub fn render_circuit(
 
                                                              {
                                                                  if is_rotation {
+                                                                     let current_angle = gate_inst.gate.angle()
+                                                                         .map(|a| a.to_string())
+                                                                         .unwrap_or_default();
+                                                                     
                                                                      html! {
                                                                          <div class="popup-prop">
                                                                              <label>{ "Angle" }</label>
                                                                              <input type="number" step="0.1" 
                                                                                 key="angle-input"
-                                                                                value={
-                                                                                    "" 
-                                                                                }
+                                                                                value={current_angle}
+                                                                                placeholder="Enter angle"
                                                                                 oninput={on_update_angle.reform(|e: web_sys::InputEvent| {
                                                                                     let input: web_sys::HtmlInputElement = e.target_unchecked_into();
                                                                                     input.value()
                                                                                 })}
                                                                              />
                                                                              <div class="angle-presets">
-                                                                                 <button class="angle-btn" onclick={on_update_angle.reform(|_| "3.14159".to_string())}>{ "π" }</button>
-                                                                                 <button class="angle-btn" onclick={on_update_angle.reform(|_| "1.5708".to_string())}>{ "π/2" }</button>
-                                                                                 <button class="angle-btn" onclick={on_update_angle.reform(|_| "0.7854".to_string())}>{ "π/4" }</button>
+                                                                                 <button type="button" class="angle-btn" onclick={Callback::from({
+                                                                                     let on_update_angle = on_update_angle.clone();
+                                                                                     move |e: yew::MouseEvent| {
+                                                                                         e.stop_propagation();
+                                                                                         on_update_angle.emit("3.14159".to_string());
+                                                                                     }
+                                                                                 })}>{ "π" }</button>
+                                                                                 <button type="button" class="angle-btn" onclick={Callback::from({
+                                                                                     let on_update_angle = on_update_angle.clone();
+                                                                                     move |e: yew::MouseEvent| {
+                                                                                         e.stop_propagation();
+                                                                                         on_update_angle.emit("1.5708".to_string());
+                                                                                     }
+                                                                                 })}>{ "π/2" }</button>
+                                                                                 <button type="button" class="angle-btn" onclick={Callback::from({
+                                                                                     let on_update_angle = on_update_angle.clone();
+                                                                                     move |e: yew::MouseEvent| {
+                                                                                         e.stop_propagation();
+                                                                                         on_update_angle.emit("0.7854".to_string());
+                                                                                     }
+                                                                                 })}>{ "π/4" }</button>
                                                                              </div>
                                                                          </div>
                                                                      }
