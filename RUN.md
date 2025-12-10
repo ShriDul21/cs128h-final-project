@@ -1,14 +1,12 @@
 # Quantum Rust Setup
 
-*The first step, as always:*
+*To simply view the compiled website, you can visit quantumrust.vercel.app or use a static file server on the /dist folder*
+
+*For developers, we proceed normally:*
 ```
 git clone (url)
 ```
-
-*To simply view the compiled website, we need to get a static file server of your choice. 
-One option is to go on VS Code Extensions and install Five Server. Then right-click the dist folder and select "Open with Five Server". A new webpage should open up in your browser with the app!*
-
-*For developers wanting to test/modify the website locally, we need to use trunk. It will take a while since it builds from scratch*
+*We need to use trunk to render the website. It will take a while since it builds from scratch*
 ```bash
 cargo install trunk 
 ```
@@ -23,7 +21,7 @@ rustup target add wasm32-unknown-unknown
 rustup override set 1.89.0
 ```
 
-*To host the website:* 
+*To host the website locally:* 
 ```bash
 trunk serve --open 
 ```
